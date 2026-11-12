@@ -1,7 +1,7 @@
 package com.aoserver.server;
 
-import com.aoserver.network.ByteQueue;
 import com.aoserver.network.Protocol;
+import com.aoserver.utils.Log;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -30,19 +30,19 @@ public class ClientThread extends Thread{
     }
 
 
-
     public void close() {
         try {
             handleData.close();
             writeData.close();
             sc.close();
+
         } catch (IOException e) {
-            System.err.println(e.getMessage());
+            Log.err(e.getMessage());
         }
     }
 
     /**
-     * Lee nuestro array de bytes y lee cada paquete.
+     * Read complete own array bytes and read each packet.
      */
     private void readData(final int bytesRead, final byte[] dataBuffer)  {
         if (bytesRead > 0) {
@@ -55,19 +55,20 @@ public class ClientThread extends Thread{
     }
 
     private void sendData() {
-
+        // nothing to do...
     }
 
     @Override
     public void run() {
-        System.out.println("Cliente #" + id + " se ha conectado con la IP: " +
-                 sc.getInetAddress().toString() + ":" +  sc.getPort());
+        Log.debug("Client #{} has been connected with the IP {}:{}",
+                id, sc.getInetAddress().toString(), sc.getPort()
+        );
 
         try {
             this.handleData = new DataInputStream(sc.getInputStream());
             this.writeData  = new DataOutputStream(sc.getOutputStream());
 
-            final byte[] dataBuffer = new byte[10240];
+            final byte[] dataBuffer = new byte[10240]; // uwu
             int bytesRead; // leemos los bytes que recibimos
 
             while ((bytesRead = handleData.read(dataBuffer)) != -1) {
@@ -76,10 +77,10 @@ public class ClientThread extends Thread{
 
 
         } catch (Exception e) {
-            System.err.println("Cliente #" + id + " error inesperado: " + e.getMessage());
+            Log.err("Client #{} error: {}", id, e.getMessage());
 
         } finally {
-            System.out.println("Cliente #" + id + " desconectado.");
+            Log.debug("Client #{} disconnect from the server.", id);
             close();
         }
 

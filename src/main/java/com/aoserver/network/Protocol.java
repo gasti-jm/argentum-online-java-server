@@ -1,6 +1,7 @@
 package com.aoserver.network;
 
 import com.aoserver.network.packets.ClientPacketID;
+import com.aoserver.utils.Log;
 
 public class Protocol {
     private long userIndex;
@@ -22,7 +23,7 @@ public class Protocol {
 
         if (p > ClientPacketID.values().length) return;
         ClientPacketID packet = ClientPacketID.values()[p];
-        System.out.println(packet + " #" + p);
+        Log.debug("{} # {}", packet, p);
 
         switch (packet) {
             case LoginExistingChar: handleLoginExistingChar(); break;
@@ -554,7 +555,7 @@ public class Protocol {
 
     private void handleLoginExistingChar() {
         if (incomingData.length() < 6) {
-            System.err.println("ERROR" + " en handleLoginExistingChar");
+            Log.err("Error en handleLoginExistingChar");
             return;
         }
 
@@ -565,10 +566,13 @@ public class Protocol {
         buffer.readByte();
 
         final String userName = buffer.readASCIIString();
-        System.out.println("userName = " + userName);
         final String password = buffer.readASCIIString();
-        System.out.println("password = " + password);
+
+        Log.debug("Usuario {} con la password {}, se ha conectado al servidor.", userName, password);
+
         final String version = buffer.readByte() + "." + buffer.readByte() + "." + buffer.readByte();
+
+
 
 
         //If Not AsciiValidos(UserName) Then
@@ -595,6 +599,6 @@ public class Protocol {
         //        End If
 
         incomingData.copyBuffer(buffer);
-        System.out.println("LoginExistingChar - FALTA TERMINAR.");
+        Log.debug("LoginExistingChar - FALTA TERMINAR.");
     }
 }
