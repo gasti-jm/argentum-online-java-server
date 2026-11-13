@@ -141,6 +141,7 @@ public class ByteQueue {
         return writeData(buf, value.length() + 2);
     }
 
+
     public int writeUnicodeString(String value) {
         byte[] valueBytes = value.getBytes();
         byte[] buf = new byte[value.length() + 2];
@@ -195,6 +196,25 @@ public class ByteQueue {
             byte[] buf = new byte[length];
             removeData(readData(buf, length));
             return buf;
+        } else {
+            throw new RuntimeException("Not enough data");
+        }
+    }
+
+    public String readASCIIStringFixed(int length) {
+        if (length <= 0) {
+            return "";
+        }
+
+        if (queueLength >= length) {
+            byte[] buf = new byte[length];
+            removeData(readData(buf, length));
+
+            try {
+                return new String(buf, "Cp1252");
+            } catch (UnsupportedEncodingException e) {
+                throw new RuntimeException(e);
+            }
         } else {
             throw new RuntimeException("Not enough data");
         }

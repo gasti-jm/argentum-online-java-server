@@ -1,7 +1,10 @@
 package com.aoserver.network;
 
 import com.aoserver.network.packets.ClientPacketID;
+import com.aoserver.network.packets.ServerPacketID;
 import com.aoserver.utils.Log;
+
+import static com.aoserver.AOServer.auxiliarBuffer;
 
 public class Protocol {
     private long userIndex;
@@ -17,6 +20,16 @@ public class Protocol {
         incomingData.writeBlock(dataBuffer, -1);
     }
 
+    public String prepareMessageErrorMsg(String message) {
+        auxiliarBuffer.writeByte(ServerPacketID.ERROR_MSG.getId());
+        auxiliarBuffer.writeASCIIString(message);
+
+        return auxiliarBuffer.readASCIIStringFixed(auxiliarBuffer.length());
+    }
+
+    public void writeErrorMsg(long userIndex, String message) {
+        outgoingData.writeASCIIString(prepareMessageErrorMsg(message));
+    }
 
     public void handleIncomingData() {
         byte p = incomingData.peekByte();
@@ -571,8 +584,7 @@ public class Protocol {
         Log.debug("Usuario {} con la password {}, se ha conectado al servidor.", userName, password);
 
         final String version = buffer.readByte() + "." + buffer.readByte() + "." + buffer.readByte();
-
-
+        Log.debug("Version del servidor: {}", version);
 
 
         //If Not AsciiValidos(UserName) Then

@@ -7,11 +7,10 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
-
-
+import java.util.Arrays;
 
 public class ClientThread extends Thread{
-    public static long contID = 0;
+    public static long contClients = 0;
 
     private long id;
     private Socket sc;
@@ -20,9 +19,9 @@ public class ClientThread extends Thread{
     private Protocol protocol;
 
     public ClientThread(Socket sc) {
-        contID++;
+        contClients++;
 
-        this.id = contID;
+        this.id = contClients;
         this.sc = sc;
         this.handleData = null;
         this.writeData = null;
@@ -35,6 +34,8 @@ public class ClientThread extends Thread{
             handleData.close();
             writeData.close();
             sc.close();
+
+            contClients--;
 
         } catch (IOException e) {
             Log.err(e.getMessage());
@@ -66,23 +67,57 @@ public class ClientThread extends Thread{
 
         try {
             this.handleData = new DataInputStream(sc.getInputStream());
-            this.writeData  = new DataOutputStream(sc.getOutputStream());
+            this.writeData = new DataOutputStream(sc.getOutputStream());
 
-            final byte[] dataBuffer = new byte[10240]; // uwu
-            int bytesRead; // leemos los bytes que recibimos
 
-            while ((bytesRead = handleData.read(dataBuffer)) != -1) {
-                readData(bytesRead, dataBuffer);
+            byte[] buffer = new byte[10240];
+            int bytesRead;
+
+            // read() bloquea el hilo hasta que lleguen datos o se cierre el socket (-1)
+            while ((bytesRead = handleData.read(buffer)) != -1) {
+                // Copiamos solo los bytes realmente leídos para pasarlos a tu protocolo
+                byte[] exactData = Arrays.copyOf(buffer, bytesRead);
+                readData(bytesRead, exactData);
             }
 
 
+
         } catch (Exception e) {
-            Log.err("Client #{} error: {}", id, e.getMessage());
+            Log.err("Client #{} error - {}", id, e.getMessage());
 
         } finally {
-            Log.debug("Client #{} disconnect from the server.", id);
+            Log.debug("Client #{} has been disconnect from the server.", id);
             close();
         }
 
     }
+
+
+    /**
+     * Verifica si el socket esta listo para escribir datos.
+     *
+     * @return true si el socket esta conectado y el flujo de salida esta disponible
+     */
+    private boolean isReadyForWriting() {
+        return isReadyForCommunication() && writeData != null;
+    }
+
+    /**
+     * Verifica si el socket esta listo para leer datos.
+     *
+     * @return true si el socket esta conectado y el flujo de entrada esta disponible
+     */
+    private boolean isReadyForReading() {
+        return isReadyForCommunication() && handleData != null;
+    }
+
+    /**
+     * Verifica si el socket esta preparado para comunicarse.
+     *
+     * @return true si el socket existe, esta conectado y no esta cerrado
+     */
+    private boolean isReadyForCommunication() {
+        return sc != null && sc.isConnected() && !sc.isClosed();
+    }
+
 }

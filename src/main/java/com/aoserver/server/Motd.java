@@ -5,8 +5,8 @@ import com.aoserver.utils.TextFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Motd {
-    private static Motd instance = null;
+public enum Motd {
+    INSTANCE;
 
     private int maxLines;
 
@@ -17,17 +17,9 @@ public class Motd {
 
     private List<MotdInfo> dataLines;
 
-    private Motd() {
+    Motd() {
         this.maxLines = 0;
         this.dataLines = new ArrayList<>();
-    }
-
-    public static Motd getInstance() {
-        if(instance == null) {
-            instance = new Motd();
-        }
-
-        return instance;
     }
 
     public void loadMotd() {
@@ -35,7 +27,6 @@ public class Motd {
 
 
     }
-
 
 
 }
