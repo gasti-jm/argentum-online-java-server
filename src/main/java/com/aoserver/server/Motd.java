@@ -1,6 +1,5 @@
 package com.aoserver.server;
 
-import com.aoserver.utils.TextFormat;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,7 +11,6 @@ public enum Motd {
 
     class MotdInfo {
         String text;
-        TextFormat format;
     }
 
     private List<MotdInfo> dataLines;

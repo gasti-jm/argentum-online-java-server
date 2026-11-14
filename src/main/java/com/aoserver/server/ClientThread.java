@@ -9,27 +9,30 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.Arrays;
 
+import static com.aoserver.AOServer.clients;
+
 public class ClientThread extends Thread{
+    private static final ClientIdManager idManager = new ClientIdManager();
     public static long contClients = 0;
 
-    private long id;
-    private Socket sc;
+    private final int id;
+    private final Socket sc;
     private DataInputStream handleData;
     private DataOutputStream writeData;
-    private Protocol protocol;
+    private final Protocol protocol;
 
     public ClientThread(Socket sc) {
         contClients++;
-
-        this.id = contClients;
+        this.id = idManager.allocate();
         this.sc = sc;
         this.handleData = null;
         this.writeData = null;
-        this.protocol = new Protocol(id);
+        this.protocol = new Protocol();
     }
 
 
-    public void close() {
+    public void disconnect() {
+        Log.debug("Client #{} has been disconnect from the server.", id);
         try {
             handleData.close();
             writeData.close();
@@ -39,6 +42,8 @@ public class ClientThread extends Thread{
 
         } catch (IOException e) {
             Log.err(e.getMessage());
+        } finally {
+            idManager.release(id);
         }
     }
 
@@ -56,7 +61,21 @@ public class ClientThread extends Thread{
     }
 
     private void sendData() {
-        // nothing to do...
+        if (!isReadyForWriting()) return;
+        var pBuf = protocol.getOutgoingData();
+
+        // if there are bytes on the output buffer
+        if (pBuf != null && pBuf.getLength() > 0) {
+            // extract the output buffer bytes
+            byte[] bytes = pBuf.readBytes();
+            try {
+                // send bytes
+                writeData.write(bytes);
+            } catch (IOException e) {
+                Log.err("Failed to writing bytes: {}", e.getMessage());
+                disconnect();
+            }
+        }
     }
 
     @Override
@@ -69,7 +88,6 @@ public class ClientThread extends Thread{
             this.handleData = new DataInputStream(sc.getInputStream());
             this.writeData = new DataOutputStream(sc.getOutputStream());
 
-
             byte[] buffer = new byte[10240];
             int bytesRead;
 
@@ -78,20 +96,20 @@ public class ClientThread extends Thread{
                 // Copiamos solo los bytes realmente leídos para pasarlos a tu protocolo
                 byte[] exactData = Arrays.copyOf(buffer, bytesRead);
                 readData(bytesRead, exactData);
+
+                // send to client data.
+                sendData();
             }
 
-
-
         } catch (Exception e) {
-            Log.err("Client #{} error - {}", id, e.getMessage());
+            if(!sc.isClosed())
+                Log.err("Client #{} error - {}", id, e.getMessage());
 
         } finally {
-            Log.debug("Client #{} has been disconnect from the server.", id);
-            close();
+            disconnect();
         }
 
     }
-
 
     /**
      * Verifica si el socket esta listo para escribir datos.
@@ -120,4 +138,11 @@ public class ClientThread extends Thread{
         return sc != null && sc.isConnected() && !sc.isClosed();
     }
 
+    public int getClientID() {
+        return this.id;
+    }
+
+    public static void closeSocket(int userIndex) {
+        clients.get(userIndex).disconnect();
+    }
 }

@@ -4,31 +4,33 @@ import com.aoserver.network.packets.ClientPacketID;
 import com.aoserver.network.packets.ServerPacketID;
 import com.aoserver.utils.Log;
 
-import static com.aoserver.AOServer.auxiliarBuffer;
-
 public class Protocol {
-    private long userIndex;
-    private ByteQueue incomingData, outgoingData;
+    private PacketBuffer incomingData, outgoingData;
+    // for send many messages in all clients. (I don't think that's the right thing to do)
+    public static PacketBuffer auxiliarBuffer = new PacketBuffer();
 
-    public Protocol(long userIndex) {
-        this.userIndex = userIndex;
-        this.incomingData = new ByteQueue();
-        this.outgoingData = new ByteQueue();
+    public Protocol() {
+        this.incomingData = new PacketBuffer();
+        this.outgoingData = new PacketBuffer();
     }
-    
+
+    public PacketBuffer getOutgoingData() {
+        return outgoingData;
+    }
+
     public void putDataBuffer(final byte[] dataBuffer) {
-        incomingData.writeBlock(dataBuffer, -1);
+        incomingData.writeBlock(dataBuffer);
     }
 
     public String prepareMessageErrorMsg(String message) {
         auxiliarBuffer.writeByte(ServerPacketID.ERROR_MSG.getId());
-        auxiliarBuffer.writeASCIIString(message);
+        auxiliarBuffer.writeCp1252String(message);
 
-        return auxiliarBuffer.readASCIIStringFixed(auxiliarBuffer.length());
+        return auxiliarBuffer.readCp1252StringFixed(auxiliarBuffer.getLength());
     }
 
-    public void writeErrorMsg(long userIndex, String message) {
-        outgoingData.writeASCIIString(prepareMessageErrorMsg(message));
+    public void writeErrorMsg(String message) {
+        outgoingData.writeASCIIStringFixed(prepareMessageErrorMsg(message));
     }
 
     public void handleIncomingData() {
@@ -173,7 +175,7 @@ public class Protocol {
         }
 
         // Done with this packet, move on to next one
-        if (incomingData.length() > 0) {
+        if (incomingData.getLength() > 0) {
             handleIncomingData();
         }
 
@@ -567,24 +569,20 @@ public class Protocol {
     }
 
     private void handleLoginExistingChar() {
-        if (incomingData.length() < 6) {
+        if (incomingData.getLength() < 6) {
             Log.err("Error en handleLoginExistingChar");
             return;
         }
 
-        ByteQueue buffer = new ByteQueue();
-        buffer.copyBuffer(incomingData);
+        PacketBuffer buffer = new PacketBuffer();
+        buffer.copy(incomingData);
 
         // Remove packet ID
         buffer.readByte();
 
-        final String userName = buffer.readASCIIString();
-        final String password = buffer.readASCIIString();
-
-        Log.debug("Usuario {} con la password {}, se ha conectado al servidor.", userName, password);
-
-        final String version = buffer.readByte() + "." + buffer.readByte() + "." + buffer.readByte();
-        Log.debug("Version del servidor: {}", version);
+        final var userName = buffer.readCp1252String();
+        final var password = buffer.readCp1252String();
+        final var version = buffer.readByte() + "." + buffer.readByte() + "." + buffer.readByte();
 
 
         //If Not AsciiValidos(UserName) Then
@@ -610,7 +608,9 @@ public class Protocol {
         //            Call ConnectUser(UserIndex, UserName, Password)
         //        End If
 
-        incomingData.copyBuffer(buffer);
+        writeErrorMsg("Todavia no termine loco para.");
+
+        incomingData.copy(buffer);
         Log.debug("LoginExistingChar - FALTA TERMINAR.");
     }
 }
