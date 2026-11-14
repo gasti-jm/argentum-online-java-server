@@ -30,7 +30,7 @@ import java.util.Map;
  * puede ocupar en un byte y el ID del paquete ocupa 1 byte... buscar forma de agregar mas paquetes
  */
 
-public enum ServerPacketID {
+public enum ServerPacket {
 
     LOGGED(0),                    // LOGGED
     REMOVE_DIALOGS(1),            // QTDL
@@ -139,7 +139,7 @@ public enum ServerPacketID {
     CANCEL_OFFER_ITEM(103);
 
     /** Utiliza un HashMap que proporciona acceso en tiempo constante (complejidad O(1)). */
-    public static final Map<Integer, ServerPacketID> PACKET_REGISTRY = new HashMap<>();
+    public static final Map<Integer, ServerPacket> PACKET_REGISTRY = new HashMap<>();
 
     /* Inicializacion estatica del mapa de busqueda para ServerPackets
      *
@@ -150,13 +150,13 @@ public enum ServerPacketID {
      * 3. Deteccion temprana de errores
      * 4. Optimizacion de memoria al evitar redimensionamientos */
     static {
-        for (ServerPacketID packet : values())
+        for (ServerPacket packet : values())
             PACKET_REGISTRY.put(packet.getId(), packet);
     }
 
     private final int id;
 
-    ServerPacketID(int id) {
+    ServerPacket(int id) {
         this.id = id;
     }
 
@@ -169,8 +169,8 @@ public enum ServerPacketID {
      * @return el paquete (ServerPacket) asociado con el identificador proporcionado
      * @throws IllegalArgumentException si no se encuentra ningun paquete con el ID dado
      */
-    public static ServerPacketID getPacket(int id) {
-        ServerPacketID packet = PACKET_REGISTRY.get(id);
+    public static ServerPacket getPacket(int id) {
+        ServerPacket packet = PACKET_REGISTRY.get(id);
         if (packet == null) throw new IllegalArgumentException("No ServerPacket found with ID: " + id);
         return packet;
     }

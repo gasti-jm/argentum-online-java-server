@@ -1,6 +1,6 @@
 package com.aoserver.network.packets;
 
-public enum ClientPacketID {
+public enum ClientPacket {
     LoginExistingChar,       //OLOGIN
     ThrowDices,              //TIRDAD
     LoginNewChar,            //NLOGIN

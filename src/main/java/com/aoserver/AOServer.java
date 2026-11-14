@@ -13,13 +13,11 @@ import java.util.Map;
 public class AOServer {
     // for test and launch options.
     public static boolean SERVER_DEBUG = false;
-
     private static ServerSocket svSocket = null;
     private final Console console;
 
-    // clients connected list
+    // clients connected list (UserList in VB6)
     public static Map<Integer, ClientThread> clients = new HashMap<>();
-
 
     public AOServer() {
         this.console = new Console();
@@ -38,10 +36,10 @@ public class AOServer {
     }
 
     /**
-     * Initializing Socket
+     * Initializing Socket and own console.
      */
     private void initSocket() {
-        Log.info("Opening server socket in port 7666 (DEFAULT).");
+        Log.debug("Opening server socket in port 7666 (DEFAULT).");
         console.start();
 
         try {
@@ -69,10 +67,13 @@ public class AOServer {
         Log.info("Initializing data server...");
     }
 
+    /**
+     * Close server socket.
+     */
     public static void closeServer() {
         try {
             svSocket.close();
-            Log.warn("Server Closed!");
+            Log.warn("Server close and finalized!");
         } catch (IOException e) {
             Log.err("Failed to close the server socket - {}", e.getMessage());
         }

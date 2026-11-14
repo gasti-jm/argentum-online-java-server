@@ -1,8 +1,10 @@
 package com.aoserver.network;
 
-import com.aoserver.network.packets.ClientPacketID;
-import com.aoserver.network.packets.ServerPacketID;
+import com.aoserver.network.packets.ClientPacket;
+import com.aoserver.network.packets.ServerPacket;
 import com.aoserver.utils.Log;
+
+import java.util.Random;
 
 public class Protocol {
     private PacketBuffer incomingData, outgoingData;
@@ -23,7 +25,7 @@ public class Protocol {
     }
 
     public String prepareMessageErrorMsg(String message) {
-        auxiliarBuffer.writeByte(ServerPacketID.ERROR_MSG.getId());
+        auxiliarBuffer.writeByte(ServerPacket.ERROR_MSG.getId());
         auxiliarBuffer.writeCp1252String(message);
 
         return auxiliarBuffer.readCp1252StringFixed(auxiliarBuffer.getLength());
@@ -33,12 +35,25 @@ public class Protocol {
         outgoingData.writeASCIIStringFixed(prepareMessageErrorMsg(message));
     }
 
+    public void writeDiceRoll() {
+        var random = new Random();
+        outgoingData.writeByte(ServerPacket.DICE_ROLL.getId());
+
+        outgoingData.writeByte(Math.max(15, 13 + random.nextInt(4) + random.nextInt(3))); // fuerza
+        outgoingData.writeByte(Math.max(15, 12 + random.nextInt(4) + random.nextInt(4))); // agilidad
+        outgoingData.writeByte(Math.max(16, 13 + random.nextInt(4) + random.nextInt(3))); // inteligencia
+
+        outgoingData.writeByte(Math.max(15, 12 + random.nextInt(4) + random.nextInt(4))); // carisma
+        outgoingData.writeByte(16 + random.nextInt(2) + random.nextInt(2)); // constitucion
+    }
+
     public void handleIncomingData() {
         byte p = incomingData.peekByte();
 
-        if (p > ClientPacketID.values().length) return;
-        ClientPacketID packet = ClientPacketID.values()[p];
+        if (p > ClientPacket.values().length) return;
+        ClientPacket packet = ClientPacket.values()[p];
         Log.debug("{} # {}", packet, p);
+
 
         switch (packet) {
             case LoginExistingChar: handleLoginExistingChar(); break;
@@ -170,6 +185,7 @@ public class Protocol {
             case ShareNpc: handleShareNpc(); break;
             case StopSharingNpc: handleStopSharingNpc(); break;
             case Consulta: handleConsultation(); break;
+
             default:
                 return;
         }
@@ -206,7 +222,19 @@ public class Protocol {
     }
 
     private void handleThrowDices() {
-        
+        // remove packet id
+        incomingData.readByte();
+
+
+//        With UserList(UserIndex).Stats
+//                .UserAtributos(eAtributos.Fuerza) = MaximoInt(15, 13 + RandomNumber(0, 3) + RandomNumber(0, 2))
+//                .UserAtributos(eAtributos.Agilidad) = MaximoInt(15, 12 + RandomNumber(0, 3) + RandomNumber(0, 3))
+//                .UserAtributos(eAtributos.Inteligencia) = MaximoInt(16, 13 + RandomNumber(0, 3) + RandomNumber(0, 2))
+//                .UserAtributos(eAtributos.Carisma) = MaximoInt(15, 12 + RandomNumber(0, 3) + RandomNumber(0, 3))
+//                .UserAtributos(eAtributos.Constitucion) = 16 + RandomNumber(0, 1) + RandomNumber(0, 1)
+//        End With
+
+        writeDiceRoll();
     }
 
     private void handleConsultation() {
