@@ -42,7 +42,6 @@ public class Protocol {
         outgoingData.writeByte(Math.max(15, 13 + random.nextInt(4) + random.nextInt(3))); // fuerza
         outgoingData.writeByte(Math.max(15, 12 + random.nextInt(4) + random.nextInt(4))); // agilidad
         outgoingData.writeByte(Math.max(16, 13 + random.nextInt(4) + random.nextInt(3))); // inteligencia
-
         outgoingData.writeByte(Math.max(15, 12 + random.nextInt(4) + random.nextInt(4))); // carisma
         outgoingData.writeByte(16 + random.nextInt(2) + random.nextInt(2)); // constitucion
     }
@@ -224,15 +223,6 @@ public class Protocol {
     private void handleThrowDices() {
         // remove packet id
         incomingData.readByte();
-
-
-//        With UserList(UserIndex).Stats
-//                .UserAtributos(eAtributos.Fuerza) = MaximoInt(15, 13 + RandomNumber(0, 3) + RandomNumber(0, 2))
-//                .UserAtributos(eAtributos.Agilidad) = MaximoInt(15, 12 + RandomNumber(0, 3) + RandomNumber(0, 3))
-//                .UserAtributos(eAtributos.Inteligencia) = MaximoInt(16, 13 + RandomNumber(0, 3) + RandomNumber(0, 2))
-//                .UserAtributos(eAtributos.Carisma) = MaximoInt(15, 12 + RandomNumber(0, 3) + RandomNumber(0, 3))
-//                .UserAtributos(eAtributos.Constitucion) = 16 + RandomNumber(0, 1) + RandomNumber(0, 1)
-//        End With
 
         writeDiceRoll();
     }

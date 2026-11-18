@@ -9,18 +9,19 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Scanner;
 
 public class AOServer {
     // for test and launch options.
     public static boolean SERVER_DEBUG = false;
     private static ServerSocket svSocket = null;
-    private final Console console;
+    private Console console;
 
     // clients connected list (UserList in VB6)
     public static Map<Integer, ClientThread> clients = new HashMap<>();
 
     public AOServer() {
-        this.console = new Console();
+        this.console = new Console(new Scanner(System.in));
     }
 
     public void start() {
@@ -39,11 +40,12 @@ public class AOServer {
      * Initializing Socket and own console.
      */
     private void initSocket() {
-        Log.debug("Opening server socket in port 7666 (DEFAULT).");
-        console.start();
-
         try {
             svSocket = new ServerSocket(7666);
+            Log.debug("Server socket opened in port 7666 (DEFAULT).");
+
+            var consoleThread = new Thread(this.console);
+            consoleThread.start();
 
             while(!svSocket.isClosed()) {
                 var sv = svSocket.accept();
@@ -65,6 +67,14 @@ public class AOServer {
      */
     private void initComponents() {
         Log.info("Initializing data server...");
+    }
+
+    public void setConsole(Console console) {
+        this.console = console;
+    }
+
+    public Console getConsole() {
+        return console;
     }
 
     /**

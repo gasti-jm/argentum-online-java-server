@@ -7,15 +7,14 @@ import com.aoserver.utils.Log;
 import java.util.Scanner;
 
 import static com.aoserver.AOServer.clients;
-import static com.aoserver.AOServer.closeServer;
 
 public class Console extends Thread {
     private boolean running;
     private Scanner input;
     private String command;
 
-    public Console() {
-        this.input = new Scanner(System.in);
+    public Console(Scanner input) {
+        this.input = input;
         this.command = "";
         this.running = true;
     }
@@ -23,7 +22,7 @@ public class Console extends Thread {
     @Override
     public void run() {
         // We dont stop while AO Server is running!
-        while(running) {
+        while (running && input.hasNextLine()) {
             this.command = input.nextLine().toUpperCase();
 
                 if(command.startsWith("/")) {
@@ -54,4 +53,7 @@ public class Console extends Thread {
         }
     }
 
+    public boolean isRunning() {
+        return running;
+    }
 }
